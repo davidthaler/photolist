@@ -1,5 +1,3 @@
-// TODO: change this:
-let id = 0;
 const HEIGHT = 120;
 const WIDTH = 90;
 const output = document.getElementById('output');
@@ -11,11 +9,29 @@ const img0 = new Image(WIDTH, HEIGHT);
 const canvas = document.createElement('canvas');
 [canvas.width, canvas.height] = [WIDTH, HEIGHT];
 
+
+async function nextIndex(){
+    await idbKeyval.update('index', (idx) => (idx || 0) + 1);
+    return await idbKeyval.get('index');
+}
+
 function getListItem(id){
     const newItem = item0.cloneNode(true);
     newItem.setAttribute('id', id);
     newItem.querySelector('textarea').addEventListener('change', e => {
-        console.log(`item ${id} changed.`);
+        console.log(`item ${id}: ${e.target.value}`);
+        idbKeyval.update(id, line => {
+            line.text = e.target.value;
+            return line;
+        }).catch(err => {console.error(err)});
+    });
+    newItem.querySelector('.trash').addEventListener('click', e => {
+        console.log(`Deleting item ${id}`);
+        idbKeyval.del(id)
+            .then(() => {
+                newItem.remove();
+            })
+            .catch(err => {console.error(err)});
     });
     return newItem;
 }
@@ -26,22 +42,31 @@ function Line(image, text='', done=false){
     this.done  = done;
 }
 
+function clear(){
+    idbKeyval.clear().then( () => {
+        output.querySelectorAll('li').forEach(li => li.remove());
+    }).catch(err => console.error(err));
+}
+
+// TODO: image input should be reset at some point
+// TODO: if no file is selected, we are getting an error
 imageInput.addEventListener('change', e => {
     const imgURL = URL.createObjectURL(e.target.files[0]);
-    img0.onload = () => {
+    img0.onload = async () => {
         URL.revokeObjectURL(imgURL);
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img0, 0, 0, WIDTH, HEIGHT);
-        const item = getListItem(++id);
+        const id = await nextIndex();
+        const item = getListItem(id);
         const itemImage = item.querySelector('img');
-        itemImage.classList.remove('camera');
+        itemImage.classList.remove('blank-image');
         canvas.toBlob(blob => {
             const itemURL = URL.createObjectURL(blob);
             itemImage.onload = () => {
                 URL.revokeObjectURL(itemURL);
             }
             itemImage.src = itemURL;
-            document.body.append(item);
+            output.append(item);
             const line = new Line(blob);
             idbKeyval.set(id, line).then(console.log(`image stored in line ${id}`));
         }, 'image/jpeg', 0.9);
