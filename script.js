@@ -9,15 +9,35 @@ const img0 = new Image(WIDTH, HEIGHT);
 const canvas = document.createElement('canvas');
 [canvas.width, canvas.height] = [WIDTH, HEIGHT];
 
+window.addEventListener('load', async () => {
+    let keys = await idbKeyval.keys();
+    keys = keys.filter(x => x != 'index');
+    for(let id of keys){
+        const line = await idbKeyval.get(id);
+        output.append(getListItem(id, line));
+    }
+});
 
 async function nextIndex(){
     await idbKeyval.update('index', (idx) => (idx || 0) + 1);
-    return await idbKeyval.get('index');
+    return idbKeyval.get('index');
 }
 
-function getListItem(id){
+function getListItem(id, line){
     const newItem = item0.cloneNode(true);
     newItem.setAttribute('id', id);
+    if(line && line.image){
+        const itemImage = newItem.querySelector('img');
+        itemImage.classList.remove('blank-image');
+        const imgURL = URL.createObjectURL(line.image);
+        itemImage.onload = function(){
+            URL.revokeObjectURL(imgURL)
+        }
+        itemImage.src = imgURL;
+    }
+    if(line && line.text){
+        newItem.querySelector('textarea').textContent = line.text;
+    }
     newItem.querySelector('textarea').addEventListener('change', e => {
         console.log(`item ${id}: ${e.target.value}`);
         idbKeyval.update(id, line => {
