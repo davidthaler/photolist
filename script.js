@@ -35,7 +35,6 @@ imageInput.addEventListener('change', e => {
         const item = getListItem(++id);
         const itemImage = item.querySelector('img');
         itemImage.classList.remove('camera');
-        itemImage.classList.add('thumb')
         canvas.toBlob(blob => {
             const itemURL = URL.createObjectURL(blob);
             itemImage.onload = () => {

@@ -2,10 +2,6 @@ main{
     max-width: 60rem;
 }
 
-img.thumb{
-    object-fit: contain;
-}
-
 img.camera{
     height: 50px;
     width: 50px;
