@@ -1,5 +1,6 @@
 const HEIGHT = 120;
 const WIDTH = 90;
+const INDEX = 'photolist_index'
 const output = document.getElementById('output');
 const imageInput = document.getElementById('imageInput');
 const item0 = document.getElementById('item0');
@@ -11,7 +12,7 @@ const canvas = document.createElement('canvas');
 
 window.addEventListener('load', async () => {
     let keys = await idbKeyval.keys();
-    keys = keys.filter(x => x != 'index');
+    keys = keys.filter(x => x != INDEX);
     for(let id of keys){
         const line = await idbKeyval.get(id);
         output.append(getListItem(id, line));
@@ -19,8 +20,8 @@ window.addEventListener('load', async () => {
 });
 
 async function nextIndex(){
-    await idbKeyval.update('index', (idx) => (idx || 0) + 1);
-    return idbKeyval.get('index');
+    await idbKeyval.update(INDEX, (idx) => (idx || 0) + 1);
+    return idbKeyval.get(INDEX);
 }
 
 function getListItem(id, line){
